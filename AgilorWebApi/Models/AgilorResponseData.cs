@@ -9,7 +9,7 @@ namespace AgilorWebApi.Models {
         public enum RESPONSE_CODE {
             RESPONSE_NORMAL = 1000,
             RESPONSE_AGILOR_ACI_IS_NULL = 1001,
-
+            RESPONSE_TARGET_VALUE_ERROR = 1002,
 
             RESPONSE_UNKNOWN_ERROR = 9999
         }
