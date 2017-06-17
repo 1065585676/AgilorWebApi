@@ -295,6 +295,9 @@ namespace AgilorWebApi.Controllers
         {
             AgilorResponseData response = new AgilorResponseData();
 
+            // 关闭清理线程
+            SubscribeManager.StopSubscribeClearThread();
+
             if (!checkACIObject())
             {
                 response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
@@ -366,6 +369,7 @@ namespace AgilorWebApi.Controllers
 
             return response;
         }
+
         // ----------------------------------------------------------------------------------------------------
 
 

@@ -58,12 +58,14 @@ namespace AgilorWebApi.Service
                 {
                     // 清理订阅者
                     int i = 0;
-                    while(i < subscribers.Count)
+                    while (i < subscribers.Count)
                     {
+                        if (!switchSubscribeClearThread) break;
                         if (DateTime.Now.Subtract(subscribers.ElementAt(i).Value.lastPollTime).Duration().TotalSeconds > subscribers.ElementAt(i).Value.timeout)
                         {
                             subscribers.Remove(subscribers.ElementAt(i).Key);
-                        } else
+                        }
+                        else
                         {
                             i++;
                         }
@@ -73,10 +75,15 @@ namespace AgilorWebApi.Service
                     int j = 0;
                     while (j < subscribeTargets.Count)
                     {
+                        if (!switchSubscribeClearThread) break;
                         if (DateTime.Now.Subtract(subscribeTargets.ElementAt(j).Value.lastPollTime).Duration().TotalSeconds > subscribeTargets.ElementAt(j).Value.maxTimeout)
                         {
                             AgilorReaderController.agilorACI.UnWatch(subscribeTargets.ElementAt(j).Key);
                             subscribeTargets.Remove(subscribeTargets.ElementAt(j).Key);
+                        }
+                        else
+                        {
+                            j++;
                         }
                     }
                 }
@@ -90,7 +97,7 @@ namespace AgilorWebApi.Service
         /// <returns></returns>
         public static bool StartUpSubscribeClearThread()
         {
-            if(subscribeClearThread.ThreadState == ThreadState.Unstarted)
+            if (subscribeClearThread.ThreadState == ThreadState.Unstarted)
             {
                 subscribeClearThread.Start();
             }
@@ -137,9 +144,9 @@ namespace AgilorWebApi.Service
                     target.targetName = targetName;
                     target.value = null;
                     target.maxTimeout = timeout;
-                    target.lastValueUpdateTime = DateTime.Now;
-                    target.lastPollTime = DateTime.Now;
                     target.handler = new SimpleWatch();
+                    target.lastPollTime = DateTime.Now;
+                    target.lastValueUpdateTime = DateTime.Now;
 
                     subscribeTargets[targetName] = target;
 
@@ -172,9 +179,6 @@ namespace AgilorWebApi.Service
             foreach (var name in targetsName)
             {
                 subscribeTargets[name].lastPollTime = DateTime.Now;
-                DateTime t1 = subscribers[subscriberGuid].lastPollTime;
-                DateTime t2 = subscribeTargets[name].lastValueUpdateTime;
-
                 if (isAll || lastSubPoll < subscribeTargets[name].lastValueUpdateTime)
                 {
                     result.Add(subscribeTargets[name].value);
