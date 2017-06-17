@@ -278,12 +278,9 @@ namespace AgilorWebApi.Controllers
             }
             catch { }
 
-
             return false;
         }
 
-
-        // ----------------------------------------------------------------------------------------------------
         /// <summary>
         /// 订阅操作
         /// </summary>
@@ -325,6 +322,11 @@ namespace AgilorWebApi.Controllers
             return response;
         }
 
+        /// <summary>
+        /// 获取订阅点值
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         [Route("poll")]
         [HttpPost]
         public AgilorResponseData poll(dynamic obj)
@@ -370,9 +372,267 @@ namespace AgilorWebApi.Controllers
             return response;
         }
 
-        // ----------------------------------------------------------------------------------------------------
+        /// <summary>
+        /// 添加单个点
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        [Route("targets/addone")]
+        [HttpPut]
+        public AgilorResponseData addOneTarget(dynamic obj)
+        {
+            AgilorResponseData response = new AgilorResponseData();
 
+            if (!checkACIObject())
+            {
+                response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
+                return response;
+            }
 
+            try
+            {
+                //target.Name = obj.Name.ToObject<string>();
+                //target.SourceName = obj.SourceName.ToObject<string>();
+                //target.Device = obj.Device.ToObject<string>();
+                //target.Type = Agilor.Interface.Val.Value.Types.FLOAT;
+                //target.Scan = obj.Device.ToObject<Target.Status>();
+                //target.Descriptor = "";
+                //target.SourceGroup = "";
+                //target.Id = 12;
+                //target.Archiving = true;
+                //target.Compressing = true;
+                //target.DateCreated = DateTime.Now;
+                //target.HihiLimit = 12.5f;
+                //target.HiLimit = 12.6f;
+                //target.LastTime = DateTime.Now;
+                //target.LoLimit = 12.5f;
+                //target.LoloLimit = 12.5f;
+
+                Target target = null;
+
+                try
+                {
+                    target = new Target(obj.Type.ToObject<Agilor.Interface.Val.Value.Types>());
+                }
+                catch
+                {
+                    response.responseMessage = "Miss Target Type!";
+                    response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
+                    return response;
+                }
+
+                try
+                {
+                    target.Name = obj.Name.ToObject<string>();
+                }
+                catch
+                {
+                    response.responseMessage = "Miss Target Name!";
+                    response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
+                    return response;
+                }
+
+                try
+                {
+                    target.SourceName = obj.SourceName.ToObject<string>();
+                }
+                catch
+                {
+                    response.responseMessage = "Miss Target SourceName!";
+                    response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
+                    return response;
+                }
+
+                try
+                {
+                    target.Device = obj.Device.ToObject<string>();
+                }
+                catch
+                {
+                    response.responseMessage = "Miss Target Device!";
+                    response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
+                    return response;
+                }
+
+                try
+                {
+                    target.Scan = obj.Scan.ToObject<Target.Status>();
+                }
+                catch
+                {
+                    response.responseMessage = "Miss Target Scan!";
+                    response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
+                    return response;
+                }
+
+                // 可选
+                try
+                {
+                    target.Descriptor = obj.Descriptor.ToObject<string>();
+                }
+                catch { }
+                try
+                {
+                    target.SourceGroup = obj.SourceGroup.ToObject<string>();
+                }
+                catch { }
+                try
+                {
+                    target.Id = obj.Id.ToObject<int>();
+                }
+                catch { }
+                try
+                {
+                    target.Archiving = obj.Archiving.ToObject<bool>();
+                }
+                catch { }
+                try
+                {
+                    target.Compressing = obj.Compressing.ToObject<bool>();
+                }
+                catch { }
+
+                target.DateCreated = DateTime.Now;
+
+                try
+                {
+                    target.HihiLimit = obj.HihiLimit.ToObject<float>();
+                }
+                catch { }
+                try
+                {
+                    target.HiLimit = obj.HiLimit.ToObject<float>();
+                }
+                catch { }
+
+                target.LastTime = DateTime.Now;
+
+                try
+                {
+                    target.LoLimit = obj.LoLimit.ToObject<float>();
+                }
+                catch { }
+                try
+                {
+                    target.LoloLimit = obj.LoloLimit.ToObject<float>();
+                }
+                catch { }
+
+                bool isOverride = true;
+                try
+                {
+                    isOverride = obj.isOverride.ToObject<bool>();
+                }
+                catch { }
+
+                agilorACI.addTarget(target, isOverride);
+                response.reponseBody = target;
+                response.responseMessage = "Add New Target Success! 'isOverride' IS " + isOverride.ToString();
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
+            }
+            catch (Exception ex)
+            {
+                response.responseMessage = ex.ToString();
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// 添加多个点
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        [Route("targets/add")]
+        [HttpPut]
+        public AgilorResponseData addTargets(dynamic obj)
+        {
+            AgilorResponseData response = new AgilorResponseData();
+
+            if (!checkACIObject())
+            {
+                response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
+                return response;
+            }
+
+            try
+            {
+                bool isOverride = true;
+                try
+                {
+                    isOverride = obj.isOverride.ToObject<bool>();
+                }
+                catch { }
+
+                Target[] targets = null;
+                try
+                {
+                    targets = obj.targets.ToObject<Target[]>();
+                }
+                catch
+                {
+                    response.responseMessage = "Miss targets!";
+                    response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
+                    return response;
+                }
+
+                foreach (var target in targets)
+                {
+                    agilorACI.addTarget(target, isOverride);
+                }
+
+                response.reponseBody = new Dictionary<string, object>
+                {
+                    { "NewTargetsCount", targets.Length },
+                    { "isOverride", isOverride }
+                };
+                response.responseMessage = "Add New Targets Success!";
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
+            }
+            catch (Exception ex)
+            {
+                response.responseMessage = ex.ToString();
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// 删除点
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [Route("targets/delete/{id}")]
+        [HttpDelete]
+        public AgilorResponseData removeTargets(int id)
+        {
+            AgilorResponseData response = new AgilorResponseData();
+
+            if (!checkACIObject())
+            {
+                response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
+                return response;
+            }
+
+            try
+            {
+                agilorACI.removeTarget(id);
+                response.responseMessage = "Remove Targets Success!";
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
+            }
+            catch (Exception ex)
+            {
+                response.responseMessage = ex.ToString();
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
+            }
+
+            return response;
+        }
 
         /// <summary>
         /// 释放 ACI
