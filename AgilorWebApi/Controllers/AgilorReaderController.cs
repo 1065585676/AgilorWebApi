@@ -8,6 +8,8 @@ using System.Web.Http;
 using AgilorWebApi.Models;
 using Agilor.Interface;
 
+using AgilorWebApi.Service;
+
 namespace AgilorWebApi.Controllers
 {
     [RoutePrefix("AgilorReader")]
@@ -55,9 +57,10 @@ namespace AgilorWebApi.Controllers
 
             try
             {
-                response.responseMessage = "Get All Device Names And Status Success!";
+                var result = agilorACI.getDevices();
+                response.reponseBody = result;
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
-                response.reponseBody = agilorACI.getDevices();
+                response.responseMessage = "Get All Device Names And Status Success! Devices Count:" + result.Count.ToString();
             }
             catch (Exception ex)
             {
@@ -88,9 +91,10 @@ namespace AgilorWebApi.Controllers
 
             try
             {
-                response.responseMessage = "Get All Targets By Device Name Success!";
+                var result = agilorACI.getTargetsByDevice(deviceName);
+                response.reponseBody = result;
+                response.responseMessage = "Get All Targets By Device Name Success! Targets Count:" + result.Count.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
-                response.reponseBody = agilorACI.getTargetsByDevice(deviceName);
             }
             catch (Exception ex)
             {
@@ -163,16 +167,16 @@ namespace AgilorWebApi.Controllers
                     switch (agilorACI.GetTarget(targetName).Type)
                     {
                         case Agilor.Interface.Val.Value.Types.BOOL:
-                            val = (bool)obj.targetValue;
+                            val = obj.targetValue.ToObject<bool>();
                             break;
                         case Agilor.Interface.Val.Value.Types.FLOAT:
-                            val = (float)obj.targetValue;
+                            val = obj.targetValue.ToObject<float>();
                             break;
                         case Agilor.Interface.Val.Value.Types.LONG:
-                            val = (int)obj.targetValue;
+                            val = obj.targetValue.ToObject<int>();
                             break;
                         case Agilor.Interface.Val.Value.Types.STRING:
-                            val = (string)obj.targetValue;
+                            val = obj.targetValue.ToObject<string>();
                             break;
                     }
                 }
@@ -274,8 +278,97 @@ namespace AgilorWebApi.Controllers
             }
             catch { }
 
+
             return false;
         }
+
+
+        // ----------------------------------------------------------------------------------------------------
+        /// <summary>
+        /// 订阅操作
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        [Route("watch")]
+        [HttpPost]
+        public AgilorResponseData watch(dynamic obj)
+        {
+            AgilorResponseData response = new AgilorResponseData();
+
+            if (!checkACIObject())
+            {
+                response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
+                return response;
+            }
+
+            try
+            {
+                List<string> targetsName = obj.targetsName.ToObject<List<string>>();
+                int timeout = obj.timeout.ToObject<int>();
+                response.reponseBody = SubscribeManager.addSubscribe(targetsName, timeout);
+                response.responseMessage = "Watch Success! Targets Count:" + targetsName.Count.ToString();
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
+            }
+            catch (Exception ex)
+            {
+                response.responseMessage = ex.ToString();
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
+            }
+
+            // 开启订阅清理线程
+            SubscribeManager.StartUpSubscribeClearThread();
+
+            return response;
+        }
+
+        [Route("poll")]
+        [HttpPost]
+        public AgilorResponseData poll(dynamic obj)
+        {
+            AgilorResponseData response = new AgilorResponseData();
+
+            if (!checkACIObject())
+            {
+                response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
+                return response;
+            }
+
+            try
+            {
+                string subscriberGuid = obj.guid.ToObject<string>();
+                if (DateTime.Now.Subtract(SubscribeManager.subscribers[subscriberGuid].lastPollTime).Duration().TotalSeconds > SubscribeManager.subscribers[subscriberGuid].timeout)
+                {
+                    // 订阅过期
+                    response.responseMessage = "Sorry, Your Subscribe Is Timeout!";
+                    response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_SUBSCRIBE_TIMEOUT_ERROR;
+                    return response;
+                }
+
+                bool isRefresh = obj.isRefresh.ToObject<bool>();
+                //response.reponseBody = SubscribeManager.getSubscribeTargetsValue(subscriberGuid, isRefresh);
+                var result = SubscribeManager.getSubscribeTargetsValue(subscriberGuid, isRefresh);
+                response.reponseBody = new Dictionary<string, object>
+                {
+                    { "SubscribeTargetValues" , result },
+                    { "Timeout", SubscribeManager.subscribers[subscriberGuid].timeout }
+                };
+
+                response.responseMessage = "Get Subscribe Targets Value Success! Targets Count:" + result.Count.ToString();
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
+            }
+            catch (Exception ex)
+            {
+                response.responseMessage = ex.ToString();
+                response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
+            }
+
+            return response;
+        }
+        // ----------------------------------------------------------------------------------------------------
+
+
 
         /// <summary>
         /// 释放 ACI

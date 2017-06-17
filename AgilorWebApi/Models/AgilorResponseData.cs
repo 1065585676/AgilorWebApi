@@ -10,6 +10,7 @@ namespace AgilorWebApi.Models {
             RESPONSE_NORMAL = 1000,
             RESPONSE_AGILOR_ACI_IS_NULL = 1001,
             RESPONSE_TARGET_VALUE_ERROR = 1002,
+            RESPONSE_SUBSCRIBE_TIMEOUT_ERROR = 1003,
 
             RESPONSE_UNKNOWN_ERROR = 9999
         }
