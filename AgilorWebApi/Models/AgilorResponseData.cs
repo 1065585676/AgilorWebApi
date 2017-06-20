@@ -20,6 +20,6 @@ namespace AgilorWebApi.Models {
 
         public string responseMessage { get; set; }     // 响应消息，标识操作结果描述
 
-        public object reponseBody { get; set; }         // 响应体，存储响应数据等
+        public object responseBody { get; set; }         // 响应体，存储响应数据等
     }
 }

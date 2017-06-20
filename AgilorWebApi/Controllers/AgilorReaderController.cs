@@ -31,7 +31,7 @@ namespace AgilorWebApi.Controllers
 
             response.responseMessage = "Hello, Agilor!";
             response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
-            response.reponseBody = new string[]
+            response.responseBody = new string[]
             {
                 "devices",
             };
@@ -58,7 +58,7 @@ namespace AgilorWebApi.Controllers
             try
             {
                 var result = agilorACI.getDevices();
-                response.reponseBody = result;
+                response.responseBody = result;
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
                 response.responseMessage = "Get All Device Names And Status Success! Devices Count:" + result.Count.ToString();
             }
@@ -92,7 +92,7 @@ namespace AgilorWebApi.Controllers
             try
             {
                 var result = agilorACI.getTargetsByDevice(deviceName);
-                response.reponseBody = result;
+                response.responseBody = result;
                 response.responseMessage = "Get All Targets By Device Name Success! Targets Count:" + result.Count.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
@@ -124,7 +124,7 @@ namespace AgilorWebApi.Controllers
 
             try
             {
-                response.reponseBody = agilorACI.QuerySnapshots(targetNames.Split(';'));
+                response.responseBody = agilorACI.QuerySnapshots(targetNames.Split(';'));
                 response.responseMessage = "Get Target Values By Target Names Success!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
@@ -188,7 +188,7 @@ namespace AgilorWebApi.Controllers
                 }
 
                 agilorACI.SetValue(new Agilor.Interface.Val.Value(targetName, val));
-                response.reponseBody = agilorACI.QuerySnapshots(targetName);
+                response.responseBody = agilorACI.QuerySnapshots(targetName);
             }
             catch (Exception ex)
             {
@@ -218,7 +218,7 @@ namespace AgilorWebApi.Controllers
 
             try
             {
-                response.reponseBody = agilorACI.GetTarget(targetName);
+                response.responseBody = agilorACI.GetTarget(targetName);
                 response.responseMessage = "Get Target Information By Target Name Success!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
@@ -250,7 +250,7 @@ namespace AgilorWebApi.Controllers
 
             try
             {
-                response.reponseBody = agilorACI.QueryTagHistory(targetName, DateTime.Now.AddMonths(-1), DateTime.Now);
+                response.responseBody = agilorACI.QueryTagHistory(targetName, DateTime.Now.AddMonths(-1), DateTime.Now);
                 response.responseMessage = "Get Target History Information By Target Name Success!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
@@ -306,7 +306,7 @@ namespace AgilorWebApi.Controllers
             {
                 List<string> targetsName = obj.targetsName.ToObject<List<string>>();
                 int timeout = obj.timeout.ToObject<int>();
-                response.reponseBody = SubscribeManager.addSubscribe(targetsName, timeout);
+                response.responseBody = SubscribeManager.addSubscribe(targetsName, timeout);
                 response.responseMessage = "Watch Success! Targets Count:" + targetsName.Count.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
@@ -352,9 +352,9 @@ namespace AgilorWebApi.Controllers
                 }
 
                 bool isRefresh = obj.isRefresh.ToObject<bool>();
-                //response.reponseBody = SubscribeManager.getSubscribeTargetsValue(subscriberGuid, isRefresh);
+                //response.responseBody = SubscribeManager.getSubscribeTargetsValue(subscriberGuid, isRefresh);
                 var result = SubscribeManager.getSubscribeTargetsValue(subscriberGuid, isRefresh);
-                response.reponseBody = new Dictionary<string, object>
+                response.responseBody = new Dictionary<string, object>
                 {
                     { "SubscribeTargetValues" , result },
                     { "Timeout", SubscribeManager.subscribers[subscriberGuid].timeout }
@@ -527,7 +527,7 @@ namespace AgilorWebApi.Controllers
                 catch { }
 
                 agilorACI.addTarget(target, isOverride);
-                response.reponseBody = target;
+                response.responseBody = target;
                 response.responseMessage = "Add New Target Success! 'isOverride' IS " + isOverride.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
@@ -584,7 +584,7 @@ namespace AgilorWebApi.Controllers
                     agilorACI.addTarget(target, isOverride);
                 }
 
-                response.reponseBody = new Dictionary<string, object>
+                response.responseBody = new Dictionary<string, object>
                 {
                     { "NewTargetsCount", targets.Length },
                     { "isOverride", isOverride }
