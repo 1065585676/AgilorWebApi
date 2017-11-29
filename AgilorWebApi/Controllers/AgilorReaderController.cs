@@ -124,7 +124,15 @@ namespace AgilorWebApi.Controllers
 
             try
             {
-                response.responseBody = agilorACI.QuerySnapshots(targetNames.Split(';'));
+                var body = agilorACI.QuerySnapshots(targetNames.Split(';'));
+                for(int i = 0; i < body.Count; i++) {
+                    var val = body[i];
+                    if(val.Type == Agilor.Interface.Val.Value.Types.STRING) {
+                        
+                        val.Val = ((string)val.Val).Replace("\0", "");
+                    }
+                }
+                response.responseBody = body;
                 response.responseMessage = "Get Target Values By Target Names Success!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
