@@ -8,6 +8,7 @@ using System.Web.Http;
 using AgilorWebApi.Models;
 using Agilor.Interface;
 using AgilorWebApi.Service;
+using System.Configuration;
 
 namespace AgilorWebApi.Controllers
 {
@@ -20,8 +21,8 @@ namespace AgilorWebApi.Controllers
 
         AgilorController()
         {
-            ACI_SERVER_NAME = "Agilor";
-            ACI_SERVER_IP = "127.0.0.1";
+            ACI_SERVER_NAME = ConfigurationManager.AppSettings["AgilorServerName"];
+            ACI_SERVER_IP = ConfigurationManager.AppSettings["AgilorServerIp"];
             agilorACI = ACI.Instance(ACI_SERVER_NAME, ACI_SERVER_IP);
         }
 
@@ -57,15 +58,13 @@ namespace AgilorWebApi.Controllers
         public AgilorResponseData Get()
         {
             AgilorResponseData response = new AgilorResponseData();
-
-            response.responseMessage = "Hello, Agilor!";
+            response.responseMessage = "Hello, I'm " + ACI_SERVER_NAME + ":" + ACI_SERVER_IP;
             response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             response.responseBody = new string[]
             {
                 "devices",
                 "targets"
             };
-
             return response;
         }
 
