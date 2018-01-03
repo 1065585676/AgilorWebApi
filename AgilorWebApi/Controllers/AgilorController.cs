@@ -15,24 +15,9 @@ namespace AgilorWebApi.Controllers
     [RoutePrefix("Agilor")]
     public class AgilorController : ApiController
     {
-        private string ACI_SERVER_NAME;
-        private string ACI_SERVER_IP;
-        public ACI agilorACI;
-
-        AgilorController()
-        {
-            ACI_SERVER_NAME = ConfigurationManager.AppSettings["AgilorServerName"];
-            ACI_SERVER_IP = ConfigurationManager.AppSettings["AgilorServerIp"];
-            agilorACI = ACI.Instance(ACI_SERVER_NAME, ACI_SERVER_IP);
-        }
-
-        ~AgilorController()
-        {
-            if (agilorACI != null)
-            {
-                agilorACI.Dispose();
-            }
-        }
+        private static string ACI_SERVER_NAME = ConfigurationManager.AppSettings["AgilorServerName"];
+        private static string ACI_SERVER_IP = ConfigurationManager.AppSettings["AgilorServerIp"];
+        public static ACI agilorACI = ACI.Instance(ACI_SERVER_NAME, ACI_SERVER_IP);
 
         /// <summary>
         /// 检查 ACI 是否为空
@@ -41,7 +26,10 @@ namespace AgilorWebApi.Controllers
         private bool checkACIObject()
         {
             if (agilorACI != null) return true;
-            try {
+            try
+            {
+                ACI_SERVER_NAME = ConfigurationManager.AppSettings["AgilorServerName"];
+                ACI_SERVER_IP = ConfigurationManager.AppSettings["AgilorServerIp"];
                 agilorACI = ACI.Instance(ACI_SERVER_NAME, ACI_SERVER_IP);
                 if (agilorACI != null) return true;
             }
@@ -63,7 +51,9 @@ namespace AgilorWebApi.Controllers
             response.responseBody = new string[]
             {
                 "devices",
-                "targets"
+                "targets",
+                "watch",
+                "poll"
             };
             return response;
         }
@@ -158,6 +148,7 @@ namespace AgilorWebApi.Controllers
         /// </summary>
         /// <param name="targetName"></param>
         /// <returns></returns>
+        [Route("devices/{deviceName}/mask/{targetName}")]
         [Route("targets/mask/{targetName}")]
         [HttpGet]
         public AgilorResponseData GetTargetsByMaskName(string targetName)
@@ -189,6 +180,7 @@ namespace AgilorWebApi.Controllers
         /// </summary>
         /// <param name="targetNames"></param>
         /// <returns></returns>
+        [Route("devices/{deviceName}/{targetNames}")]
         [Route("targets/{targetNames}")]
         [HttpGet]
         public AgilorResponseData GetTargetValueByTargetName(string targetNames)
@@ -224,6 +216,7 @@ namespace AgilorWebApi.Controllers
         /// <param name="targetName"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
+        [Route("devices/{deviceName}/{targetName}/set")]
         [Route("targets/{targetName}/set")]
         [HttpPost]
         public AgilorResponseData SetTargetValue(string targetName, dynamic obj)
@@ -275,6 +268,7 @@ namespace AgilorWebApi.Controllers
         /// </summary>
         /// <param name="targetName"></param>
         /// <returns></returns>
+        [Route("devices/{deviceName}/{targetName}/property")]
         [Route("targets/{targetName}/property")]
         [HttpGet]
         public AgilorResponseData GetTargetPropertyByTargetName(string targetName)
@@ -302,6 +296,7 @@ namespace AgilorWebApi.Controllers
         /// </summary>
         /// <param name="targetName"></param>
         /// <returns></returns>
+        [Route("devices/{deviceName}/{targetName}/history")]
         [Route("targets/{targetName}/history")]
         [HttpGet]
         public AgilorResponseData GetTargetHistoryByTargetName(string targetName, string start = null, string end = null, int step = 0)

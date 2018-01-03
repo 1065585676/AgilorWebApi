@@ -78,7 +78,7 @@ namespace AgilorWebApi.Service
                         if (!switchSubscribeClearThread) break;
                         if (DateTime.Now.Subtract(subscribeTargets.ElementAt(j).Value.lastPollTime).Duration().TotalSeconds > subscribeTargets.ElementAt(j).Value.maxTimeout)
                         {
-                            AgilorReaderController.agilorACI.UnWatch(subscribeTargets.ElementAt(j).Key);
+                            AgilorController.agilorACI.UnWatch(subscribeTargets.ElementAt(j).Key);
                             subscribeTargets.Remove(subscribeTargets.ElementAt(j).Key);
                         }
                         else
@@ -151,7 +151,8 @@ namespace AgilorWebApi.Service
                     subscribeTargets[targetName] = target;
 
                     // 添加订阅事件
-                    AgilorReaderController.agilorACI.Watch(targetName, target.handler);
+
+                    AgilorController.agilorACI.Watch(targetName, target.handler);
                 }
                 else
                 {
