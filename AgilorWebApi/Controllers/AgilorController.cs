@@ -381,7 +381,8 @@ namespace AgilorWebApi.Controllers
             }
             try {
                 string subscriberGuid = obj.guid.ToObject<string>();
-                if (DateTime.Now.Subtract(SubscribeManager.subscribers[subscriberGuid].lastPollTime).Duration().TotalSeconds > SubscribeManager.subscribers[subscriberGuid].timeout) {
+                if (!SubscribeManager.subscribers.ContainsKey(subscriberGuid)
+                    || DateTime.Now.Subtract(SubscribeManager.subscribers[subscriberGuid].lastPollTime).Duration().TotalSeconds > SubscribeManager.subscribers[subscriberGuid].timeout) {
                     // 订阅过期
                     response.responseMessage = "Sorry, Your Subscribe Is Timeout!";
                     response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_SUBSCRIBE_TIMEOUT_ERROR;
