@@ -194,9 +194,8 @@ namespace AgilorWebApi.Controllers
             try {
                 var body = agilorACI.QuerySnapshots(targetNames.Split(';'));
                 for (int i = 0; i < body.Count; i++) {
-                    var val = body[i];
-                    if (val.Type == Agilor.Interface.Val.Value.Types.STRING) {
-                        val.Val = ((string)val.Val).Remove(((string)val.Val).IndexOf("\0"));
+                    if (body[i].Type == Agilor.Interface.Val.Value.Types.STRING) {
+                        body[i].Val = ((string)body[i].Val).Remove(((string)body[i].Val).IndexOf("\0"));
                     }
                 }
                 response.responseBody = body;
@@ -319,10 +318,9 @@ namespace AgilorWebApi.Controllers
                 }
                 if (end_t >= start_t) {
                     var body = agilorACI.QueryTagHistory(targetName, start_t, end_t, step);
-                    for (int i = 0; i < body.Count; i++) {
-                        var val = body[i];
-                        if (val.Type == Agilor.Interface.Val.Value.Types.STRING) {
-                            val.Val = ((string)val.Val).Remove(((string)val.Val).IndexOf("\0"));
+                    if (body.Count > 0 && body[0].Type == Agilor.Interface.Val.Value.Types.STRING) {
+                        for (int i = 0; i < body.Count; i++) {
+                            body[i].Val = ((string)body[i].Val).Remove(((string)body[i].Val).IndexOf("\0"));
                         }
                     }
                     response.responseBody = body;
