@@ -196,7 +196,7 @@ namespace AgilorWebApi.Controllers
                 for (int i = 0; i < body.Count; i++) {
                     var val = body[i];
                     if (val.Type == Agilor.Interface.Val.Value.Types.STRING) {
-                        val.Val = ((string)val.Val).Replace("\0", "");
+                        val.Val = ((string)val.Val).Remove(((string)val.Val).IndexOf("\0"));
                     }
                 }
                 response.responseBody = body;
@@ -313,9 +313,20 @@ namespace AgilorWebApi.Controllers
                     end_t = DateTime.Now;
                 }
                 if (!DateTime.TryParse(start, out start_t)) {
-                    start_t = end_t.AddDays(-1);
+                    int minutes = 1;
+                    int.TryParse(ConfigurationManager.AppSettings["AgilorQueryHistoryDefaultIntervalMinute"], out minutes);
+                    start_t = end_t.AddMinutes(-1 * minutes);
                 }
-                response.responseBody = agilorACI.QueryTagHistory(targetName, start_t, end_t, step);
+                if (end_t >= start_t) {
+                    var body = agilorACI.QueryTagHistory(targetName, start_t, end_t, step);
+                    for (int i = 0; i < body.Count; i++) {
+                        var val = body[i];
+                        if (val.Type == Agilor.Interface.Val.Value.Types.STRING) {
+                            val.Val = ((string)val.Val).Remove(((string)val.Val).IndexOf("\0"));
+                        }
+                    }
+                    response.responseBody = body;
+                }
                 response.responseMessage = "Get Target History Information By Target Name Success! start: " + start_t.ToString() + ", end: " + end_t.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
