@@ -323,6 +323,7 @@ namespace AgilorWebApi.Controllers
                             body[i].Val = ((string)body[i].Val).Remove(((string)body[i].Val).IndexOf("\0"));
                         }
                     }
+                    body.Reverse();
                     response.responseBody = body;
                 }
                 response.responseMessage = "Get Target History Information By Target Name Success! start: " + start_t.ToString() + ", end: " + end_t.ToString();
