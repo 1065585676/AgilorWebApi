@@ -114,7 +114,7 @@ namespace AgilorWebApi.Controllers
         }
 
         /// <summary>
-        /// 根据点名查询点值，点名可以是多个，用‘；’隔开即可。
+        /// 获取全部点值
         /// </summary>
         /// <returns></returns>
         [Route("targets")]
@@ -144,7 +144,7 @@ namespace AgilorWebApi.Controllers
         }
 
         /// <summary>
-        /// 根据点名查询点值，点名可以是多个，用‘；’隔开即可。
+        /// 根据mask点名查询点值，点名可以是多个，用‘；’隔开即可。
         /// </summary>
         /// <param name="targetName"></param>
         /// <returns></returns>
@@ -291,7 +291,7 @@ namespace AgilorWebApi.Controllers
         }
 
         /// <summary>
-        /// 根据点名查看点历史值，默认一个月内历史记录
+        /// 根据点名查看点历史值，默认1分钟内历史记录
         /// </summary>
         /// <param name="targetName"></param>
         /// <returns></returns>
