@@ -18,6 +18,20 @@ namespace AgilorWebApi.Controllers
         private static string ACI_SERVER_NAME = ConfigurationManager.AppSettings["AgilorServerName"];
         private static string ACI_SERVER_IP = ConfigurationManager.AppSettings["AgilorServerIp"];
         public static ACI agilorACI = ACI.Instance(ACI_SERVER_NAME, ACI_SERVER_IP);
+        public static List<ACI> agilorSlaveACIs = new List<ACI>() { };
+
+        static AgilorController()
+        {
+            string[] slaveIps = ConfigurationManager.AppSettings["AgilorServerSlaveIp"].Split(';');
+            string slaveName = ConfigurationManager.AppSettings["AgilorServerSlaveName"];
+            foreach (string slaveIp in slaveIps)
+            {
+                if (slaveIp.Trim() == "") continue;
+                agilorSlaveACIs.Add(ACI.Instance(slaveName + slaveIp.Trim(), slaveIp.Trim()));
+            }
+        }
+
+        AgilorController() { }
 
         /// <summary>
         /// 检查 ACI 是否为空
@@ -253,6 +267,10 @@ namespace AgilorWebApi.Controllers
                     return response;
                 }
                 agilorACI.SetValue(new Agilor.Interface.Val.Value(targetName, val));
+
+                foreach (ACI slaveAci in agilorSlaveACIs) {
+                    try { slaveAci.SetValue(new Agilor.Interface.Val.Value(targetName, val)); } catch { }
+                }
                 response.responseBody = agilorACI.QuerySnapshots(targetName);
             }
             catch (Exception ex) {
