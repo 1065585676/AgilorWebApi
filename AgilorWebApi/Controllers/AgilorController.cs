@@ -271,7 +271,7 @@ namespace AgilorWebApi.Controllers
                 foreach (ACI slaveAci in agilorSlaveACIs) {
                     try { slaveAci.SetValue(new Agilor.Interface.Val.Value(targetName, val)); } catch { }
                 }
-                response.responseBody = agilorACI.QuerySnapshots(targetName);
+                response.responseBody = GetTargetValueByTargetName(targetName).responseBody;
             }
             catch (Exception ex) {
                 response.responseMessage = ex.ToString();
