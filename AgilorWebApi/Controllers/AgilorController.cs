@@ -9,6 +9,7 @@ using AgilorWebApi.Models;
 using Agilor.Interface;
 using AgilorWebApi.Service;
 using System.Configuration;
+using System.Net.Http.Headers;
 
 namespace AgilorWebApi.Controllers
 {
@@ -18,10 +19,13 @@ namespace AgilorWebApi.Controllers
         private static string ACI_SERVER_NAME = ConfigurationManager.AppSettings["AgilorServerName"];
         private static string ACI_SERVER_IP = ConfigurationManager.AppSettings["AgilorServerIp"];
         public static ACI agilorACI = ACI.Instance(ACI_SERVER_NAME, ACI_SERVER_IP);
-        public static List<ACI> agilorSlaveACIs = new List<ACI>() { };
+
+        private static string ACI_SLAVE_NAME = ConfigurationManager.AppSettings["AgilorServerSlaveName"];
+        //public static List<ACI> agilorSlaveACIs = new List<ACI>() { };
 
         static AgilorController()
         {
+            /*
             string[] slaveIps = ConfigurationManager.AppSettings["AgilorServerSlaveIp"].Split(';');
             string slaveName = ConfigurationManager.AppSettings["AgilorServerSlaveName"];
             foreach (string slaveIp in slaveIps)
@@ -29,6 +33,7 @@ namespace AgilorWebApi.Controllers
                 if (slaveIp.Trim() == "") continue;
                 agilorSlaveACIs.Add(ACI.Instance(slaveName + slaveIp.Trim(), slaveIp.Trim()));
             }
+            */
         }
 
         AgilorController() { }
@@ -81,18 +86,21 @@ namespace AgilorWebApi.Controllers
         public AgilorResponseData GetAllDeviceNameAndStatus()
         {
             AgilorResponseData response = new AgilorResponseData();
-            if (!checkACIObject()) {
+            if (!checkACIObject())
+            {
                 response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
                 return response;
             }
-            try {
+            try
+            {
                 var result = agilorACI.getDevices();
                 response.responseBody = result;
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
                 response.responseMessage = "Get All Device Names And Status Success! Devices Count:" + result.Count.ToString();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 response.responseMessage = ex.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
@@ -109,18 +117,21 @@ namespace AgilorWebApi.Controllers
         public AgilorResponseData GetAllTargetsIDAndNameByDeviceName(string deviceName)
         {
             AgilorResponseData response = new AgilorResponseData();
-            if (!checkACIObject()) {
+            if (!checkACIObject())
+            {
                 response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
                 return response;
             }
-            try {
+            try
+            {
                 var result = agilorACI.getTargetsByDevice(deviceName);
                 response.responseBody = result;
                 response.responseMessage = "Get All Targets By Device Name Success! Targets Count:" + result.Count.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 response.responseMessage = ex.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
@@ -200,15 +211,19 @@ namespace AgilorWebApi.Controllers
         public AgilorResponseData GetTargetValueByTargetName(string targetNames)
         {
             AgilorResponseData response = new AgilorResponseData();
-            if (!checkACIObject()) {
+            if (!checkACIObject())
+            {
                 response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
                 return response;
             }
-            try {
+            try
+            {
                 var body = agilorACI.QuerySnapshots(targetNames.Split(';'));
-                for (int i = 0; i < body.Count; i++) {
-                    if (body[i].Type == Agilor.Interface.Val.Value.Types.STRING) {
+                for (int i = 0; i < body.Count; i++)
+                {
+                    if (body[i].Type == Agilor.Interface.Val.Value.Types.STRING)
+                    {
                         body[i].Val = ((string)body[i].Val).Remove(((string)body[i].Val).IndexOf("\0"));
                     }
                 }
@@ -216,7 +231,8 @@ namespace AgilorWebApi.Controllers
                 response.responseMessage = "Get Target Values By Target Names Success!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 response.responseMessage = ex.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
@@ -235,7 +251,8 @@ namespace AgilorWebApi.Controllers
         public AgilorResponseData SetTargetValue(string targetName, dynamic obj)
         {
             AgilorResponseData response = new AgilorResponseData();
-            if (!checkACIObject()) {
+            if (!checkACIObject())
+            {
                 response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
                 return response;
@@ -245,8 +262,10 @@ namespace AgilorWebApi.Controllers
                 response.responseMessage = "Set Target Value Success!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
                 object val = null;
-                try {
-                    switch (agilorACI.GetTarget(targetName).Type) {
+                try
+                {
+                    switch (agilorACI.GetTarget(targetName).Type)
+                    {
                         case Agilor.Interface.Val.Value.Types.BOOL:
                             val = obj.targetValue.ToObject<bool>();
                             break;
@@ -261,19 +280,47 @@ namespace AgilorWebApi.Controllers
                             break;
                     }
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     response.responseMessage = ex.ToString();
                     response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_TARGET_VALUE_ERROR;
                     return response;
                 }
                 agilorACI.SetValue(new Agilor.Interface.Val.Value(targetName, val));
 
-                foreach (ACI slaveAci in agilorSlaveACIs) {
-                    try { slaveAci.SetValue(new Agilor.Interface.Val.Value(targetName, val)); } catch { }
+                // 连接 Slave ACI ，如果 slave ip 断开，则会耗时
+                /*
+                string[] slaveIps = ConfigurationManager.AppSettings["AgilorServerSlaveIp"].Split(';');
+                ACI slaveAci;
+                foreach (string slaveIp in slaveIps)
+                {
+                    if (slaveIp.Trim() == "") continue;
+                    slaveAci = ACI.Instance(ACI_SLAVE_NAME, slaveIp);
+                    try
+                    {
+                        slaveAci.SetValue(new Agilor.Interface.Val.Value(targetName, val));
+                    }
+                    catch (Exception ex) {
+                        Console.WriteLine(ex.ToString() + "wyy");
+                    }
+                    slaveAci.Close();
                 }
+                */
+
+                // 向 slave 发起二次请求
+                string[] slaveIpPorts = ConfigurationManager.AppSettings["AgilorServerSlaveIp"].Split(';');
+                HttpContent httpContent = new StringContent("{\"targetValue\": \"" + val.ToString() + "\"}");
+                httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                HttpClient httpClient = new HttpClient();
+                foreach (string slaveIpPort in slaveIpPorts)
+                {
+                    httpClient.PostAsync("http://" + slaveIpPort + "/Agilor/targets/" + targetName + "/set", httpContent);
+                }
+
                 response.responseBody = GetTargetValueByTargetName(targetName).responseBody;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 response.responseMessage = ex.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
@@ -291,17 +338,20 @@ namespace AgilorWebApi.Controllers
         public AgilorResponseData GetTargetPropertyByTargetName(string targetName)
         {
             AgilorResponseData response = new AgilorResponseData();
-            if (!checkACIObject()) {
+            if (!checkACIObject())
+            {
                 response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
                 return response;
             }
-            try {
+            try
+            {
                 response.responseBody = agilorACI.GetTarget(targetName);
                 response.responseMessage = "Get Target Information By Target Name Success!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 response.responseMessage = ex.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
@@ -318,26 +368,33 @@ namespace AgilorWebApi.Controllers
         [HttpGet]
         public AgilorResponseData GetTargetHistoryByTargetName(string targetName, string start = null, string end = null, int step = 0)
         {
-           AgilorResponseData response = new AgilorResponseData();
-            if (!checkACIObject()) {
+            AgilorResponseData response = new AgilorResponseData();
+            if (!checkACIObject())
+            {
                 response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
                 return response;
             }
-            try {
+            try
+            {
                 DateTime start_t, end_t;
-                if (!DateTime.TryParse(end, out end_t)) {
+                if (!DateTime.TryParse(end, out end_t))
+                {
                     end_t = DateTime.Now;
                 }
-                if (!DateTime.TryParse(start, out start_t)) {
+                if (!DateTime.TryParse(start, out start_t))
+                {
                     int minutes = 1;
                     int.TryParse(ConfigurationManager.AppSettings["AgilorQueryHistoryDefaultIntervalMinute"], out minutes);
                     start_t = end_t.AddMinutes(-1 * minutes);
                 }
-                if (end_t >= start_t) {
+                if (end_t >= start_t)
+                {
                     var body = agilorACI.QueryTagHistory(targetName, start_t, end_t, step);
-                    if (body.Count > 0 && body[0].Type == Agilor.Interface.Val.Value.Types.STRING) {
-                        for (int i = 0; i < body.Count; i++) {
+                    if (body.Count > 0 && body[0].Type == Agilor.Interface.Val.Value.Types.STRING)
+                    {
+                        for (int i = 0; i < body.Count; i++)
+                        {
                             body[i].Val = ((string)body[i].Val).Remove(((string)body[i].Val).IndexOf("\0"));
                         }
                     }
@@ -347,7 +404,8 @@ namespace AgilorWebApi.Controllers
                 response.responseMessage = "Get Target History Information By Target Name Success! start: " + start_t.ToString() + ", end: " + end_t.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 response.responseMessage = ex.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
@@ -366,19 +424,22 @@ namespace AgilorWebApi.Controllers
             AgilorResponseData response = new AgilorResponseData();
             // 关闭清理线程
             SubscribeManager.StopSubscribeClearThread();
-            if (!checkACIObject()) {
+            if (!checkACIObject())
+            {
                 response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
                 return response;
             }
-            try {
+            try
+            {
                 List<string> targetsName = obj.targetsName.ToObject<List<string>>();
                 int timeout = obj.timeout.ToObject<int>();
                 response.responseBody = SubscribeManager.addSubscribe(targetsName, timeout);
                 response.responseMessage = "Watch Success! Targets Count:" + targetsName.Count.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 response.responseMessage = ex.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
@@ -397,15 +458,18 @@ namespace AgilorWebApi.Controllers
         public AgilorResponseData poll(dynamic obj)
         {
             AgilorResponseData response = new AgilorResponseData();
-            if (!checkACIObject()) {
+            if (!checkACIObject())
+            {
                 response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
                 return response;
             }
-            try {
+            try
+            {
                 string subscriberGuid = obj.guid.ToObject<string>();
                 if (!SubscribeManager.subscribers.ContainsKey(subscriberGuid)
-                    || DateTime.Now.Subtract(SubscribeManager.subscribers[subscriberGuid].lastPollTime).Duration().TotalSeconds > SubscribeManager.subscribers[subscriberGuid].timeout) {
+                    || DateTime.Now.Subtract(SubscribeManager.subscribers[subscriberGuid].lastPollTime).Duration().TotalSeconds > SubscribeManager.subscribers[subscriberGuid].timeout)
+                {
                     // 订阅过期
                     response.responseMessage = "Sorry, Your Subscribe Is Timeout!";
                     response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_SUBSCRIBE_TIMEOUT_ERROR;
@@ -421,7 +485,8 @@ namespace AgilorWebApi.Controllers
                 response.responseMessage = "Get Subscribe Targets Value Success! Targets Count:" + result.Count.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 response.responseMessage = ex.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
@@ -438,46 +503,61 @@ namespace AgilorWebApi.Controllers
         public AgilorResponseData addOneTarget(dynamic obj)
         {
             AgilorResponseData response = new AgilorResponseData();
-            if (!checkACIObject()) {
+            if (!checkACIObject())
+            {
                 response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
                 return response;
             }
-            try {
+            try
+            {
                 Target target = null;
-                try {
+                try
+                {
                     target = new Target(obj.Type.ToObject<Agilor.Interface.Val.Value.Types>());
                 }
-                catch {
+                catch
+                {
                     response.responseMessage = "Miss Target Type!";
                     response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
                     return response;
                 }
-                try {
+                try
+                {
                     target.Name = obj.Name.ToObject<string>();
-                } catch {
+                }
+                catch
+                {
                     response.responseMessage = "Miss Target Name!";
                     response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
                     return response;
                 }
-                try {
+                try
+                {
                     target.SourceName = obj.SourceName.ToObject<string>();
-                } catch {
+                }
+                catch
+                {
                     response.responseMessage = "Miss Target SourceName!";
                     response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
                     return response;
                 }
-                try {
+                try
+                {
                     target.Device = obj.Device.ToObject<string>();
-                } catch {
+                }
+                catch
+                {
                     response.responseMessage = "Miss Target Device!";
                     response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
                     return response;
                 }
-                try {
+                try
+                {
                     target.Scan = obj.Scan.ToObject<Target.Status>();
                 }
-                catch {
+                catch
+                {
                     response.responseMessage = "Miss Target Scan!";
                     response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
                     return response;
@@ -486,42 +566,63 @@ namespace AgilorWebApi.Controllers
                 bool isOverride = true;
                 target.LastTime = DateTime.Now;
                 target.DateCreated = DateTime.Now;
-                try {
+                try
+                {
                     target.Descriptor = obj.Descriptor.ToObject<string>();
-                } catch { }
-                try {
+                }
+                catch { }
+                try
+                {
                     target.SourceGroup = obj.SourceGroup.ToObject<string>();
-                } catch { }
-                try {
+                }
+                catch { }
+                try
+                {
                     target.Id = obj.Id.ToObject<int>();
-                } catch { }
-                try {
+                }
+                catch { }
+                try
+                {
                     target.Archiving = obj.Archiving.ToObject<bool>();
-                } catch { }
-                try {
+                }
+                catch { }
+                try
+                {
                     target.Compressing = obj.Compressing.ToObject<bool>();
-                } catch { }
-                try {
+                }
+                catch { }
+                try
+                {
                     target.HihiLimit = obj.HihiLimit.ToObject<float>();
-                } catch { }
-                try {
+                }
+                catch { }
+                try
+                {
                     target.HiLimit = obj.HiLimit.ToObject<float>();
-                } catch { }
-                try {
+                }
+                catch { }
+                try
+                {
                     target.LoLimit = obj.LoLimit.ToObject<float>();
-                } catch { }
-                try {
+                }
+                catch { }
+                try
+                {
                     target.LoloLimit = obj.LoloLimit.ToObject<float>();
-                } catch { }
-                try {
+                }
+                catch { }
+                try
+                {
                     isOverride = obj.isOverride.ToObject<bool>();
-                } catch { }
+                }
+                catch { }
                 agilorACI.addTarget(target, isOverride);
                 response.responseBody = target;
                 response.responseMessage = "Add New Target Success! 'isOverride' IS " + isOverride.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 response.responseMessage = ex.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
@@ -544,20 +645,27 @@ namespace AgilorWebApi.Controllers
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
                 return response;
             }
-            try {
+            try
+            {
                 bool isOverride = true;
-                try {
+                try
+                {
                     isOverride = obj.isOverride.ToObject<bool>();
-                } catch { }
+                }
+                catch { }
                 Target[] targets = null;
-                try {
+                try
+                {
                     targets = obj.targets.ToObject<Target[]>();
-                } catch {
+                }
+                catch
+                {
                     response.responseMessage = "Miss targets!";
                     response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_MISS_TARGET_PROPERTY_ERROR;
                     return response;
                 }
-                foreach (var target in targets) {
+                foreach (var target in targets)
+                {
                     agilorACI.addTarget(target, isOverride);
                 }
                 response.responseBody = new Dictionary<string, object> {
@@ -567,7 +675,8 @@ namespace AgilorWebApi.Controllers
                 response.responseMessage = "Add New Targets Success!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 response.responseMessage = ex.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
@@ -584,16 +693,20 @@ namespace AgilorWebApi.Controllers
         public AgilorResponseData removeTargets(int id)
         {
             AgilorResponseData response = new AgilorResponseData();
-            if (!checkACIObject()) {
+            if (!checkACIObject())
+            {
                 response.responseMessage = "Get All Device Names And Status ERROR: ACI IS NULL, Server Need Be Restart!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_AGILOR_ACI_IS_NULL;
                 return response;
             }
-            try {
+            try
+            {
                 agilorACI.removeTarget(id);
                 response.responseMessage = "Remove Targets Success!";
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_NORMAL;
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 response.responseMessage = ex.ToString();
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
