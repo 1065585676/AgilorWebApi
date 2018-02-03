@@ -9,6 +9,7 @@ using AgilorWebApi.Models;
 using Agilor.Interface;
 using AgilorWebApi.Service;
 using System.Configuration;
+using System.Threading;
 
 namespace AgilorWebApi.Controllers
 {
@@ -24,10 +25,18 @@ namespace AgilorWebApi.Controllers
         {
             string[] slaveIps = ConfigurationManager.AppSettings["AgilorServerSlaveIp"].Split(';');
             string slaveName = ConfigurationManager.AppSettings["AgilorServerSlaveName"];
+            /*
             foreach (string slaveIp in slaveIps)
             {
                 if (slaveIp.Trim() == "") continue;
                 agilorSlaveACIs.Add(ACI.Instance(slaveName + slaveIp.Trim(), slaveIp.Trim()));
+            }
+            */
+            foreach (string slaveIp in slaveIps)
+            {
+                if (slaveIp.Trim() == "") continue;
+                Thread thread = new Thread(() => agilorSlaveACIs.Add(ACI.Instance(slaveName + slaveIp.Trim(), slaveIp.Trim())));
+                thread.Start();
             }
         }
 
@@ -281,12 +290,23 @@ namespace AgilorWebApi.Controllers
                     response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_TARGET_VALUE_ERROR;
                     return response;
                 }
-                agilorACI.SetValue(new Agilor.Interface.Val.Value(targetName, val));
 
+                Agilor.Interface.Val.Value setVal = new Agilor.Interface.Val.Value(targetName, val);
+                Thread thread = new Thread(() => ThreadMainWithParameters(agilorACI, setVal));
+                thread.Start();
+                foreach (ACI slaveAci in agilorSlaveACIs)
+                {
+                    thread = new Thread(() => ThreadMainWithParameters(slaveAci, setVal));
+                    thread.Start();
+                }
+
+                /*
+                agilorACI.SetValue(new Agilor.Interface.Val.Value(targetName, val));
                 foreach (ACI slaveAci in agilorSlaveACIs)
                 {
                     try { slaveAci.SetValue(new Agilor.Interface.Val.Value(targetName, val)); } catch { }
                 }
+                */
                 response.responseBody = GetTargetValueByTargetName(targetName).responseBody;
             }
             catch (Exception ex)
@@ -295,6 +315,13 @@ namespace AgilorWebApi.Controllers
                 response.responseCode = (int)AgilorResponseData.RESPONSE_CODE.RESPONSE_UNKNOWN_ERROR;
             }
             return response;
+        }
+
+        static void ThreadMainWithParameters(ACI aci, Agilor.Interface.Val.Value val)
+        {
+            try { aci.SetValue(val); } catch { }
+            string debugMsg = "ACI IP:" + aci.IP.ToString() + "; ACI PORT:" + aci.Port.ToString() + "; ACI SERVERNAME:" + aci.Name + "; VAl:" + val.Val.ToString() + "; Thread id:" + Thread.CurrentThread.ToString();
+            System.Diagnostics.Debug.Write(debugMsg);
         }
 
         /// <summary>
