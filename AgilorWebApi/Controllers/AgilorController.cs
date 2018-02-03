@@ -9,7 +9,6 @@ using AgilorWebApi.Models;
 using Agilor.Interface;
 using AgilorWebApi.Service;
 using System.Configuration;
-using System.Net.Http.Headers;
 
 namespace AgilorWebApi.Controllers
 {
@@ -19,13 +18,10 @@ namespace AgilorWebApi.Controllers
         private static string ACI_SERVER_NAME = ConfigurationManager.AppSettings["AgilorServerName"];
         private static string ACI_SERVER_IP = ConfigurationManager.AppSettings["AgilorServerIp"];
         public static ACI agilorACI = ACI.Instance(ACI_SERVER_NAME, ACI_SERVER_IP);
-
-        private static string ACI_SLAVE_NAME = ConfigurationManager.AppSettings["AgilorServerSlaveName"];
-        //public static List<ACI> agilorSlaveACIs = new List<ACI>() { };
+        public static List<ACI> agilorSlaveACIs = new List<ACI>() { };
 
         static AgilorController()
         {
-            /*
             string[] slaveIps = ConfigurationManager.AppSettings["AgilorServerSlaveIp"].Split(';');
             string slaveName = ConfigurationManager.AppSettings["AgilorServerSlaveName"];
             foreach (string slaveIp in slaveIps)
@@ -33,7 +29,6 @@ namespace AgilorWebApi.Controllers
                 if (slaveIp.Trim() == "") continue;
                 agilorSlaveACIs.Add(ACI.Instance(slaveName + slaveIp.Trim(), slaveIp.Trim()));
             }
-            */
         }
 
         AgilorController() { }
@@ -288,35 +283,10 @@ namespace AgilorWebApi.Controllers
                 }
                 agilorACI.SetValue(new Agilor.Interface.Val.Value(targetName, val));
 
-                // 连接 Slave ACI ，如果 slave ip 断开，则会耗时
-                /*
-                string[] slaveIps = ConfigurationManager.AppSettings["AgilorServerSlaveIp"].Split(';');
-                ACI slaveAci;
-                foreach (string slaveIp in slaveIps)
+                foreach (ACI slaveAci in agilorSlaveACIs)
                 {
-                    if (slaveIp.Trim() == "") continue;
-                    slaveAci = ACI.Instance(ACI_SLAVE_NAME, slaveIp);
-                    try
-                    {
-                        slaveAci.SetValue(new Agilor.Interface.Val.Value(targetName, val));
-                    }
-                    catch (Exception ex) {
-                        Console.WriteLine(ex.ToString() + "wyy");
-                    }
-                    slaveAci.Close();
+                    try { slaveAci.SetValue(new Agilor.Interface.Val.Value(targetName, val)); } catch { }
                 }
-                */
-
-                // 向 slave 发起二次请求
-                string[] slaveIpPorts = ConfigurationManager.AppSettings["AgilorServerSlaveIp"].Split(';');
-                HttpContent httpContent = new StringContent("{\"targetValue\": \"" + val.ToString() + "\"}");
-                httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                HttpClient httpClient = new HttpClient();
-                foreach (string slaveIpPort in slaveIpPorts)
-                {
-                    httpClient.PostAsync("http://" + slaveIpPort + "/Agilor/targets/" + targetName + "/set", httpContent);
-                }
-
                 response.responseBody = GetTargetValueByTargetName(targetName).responseBody;
             }
             catch (Exception ex)
