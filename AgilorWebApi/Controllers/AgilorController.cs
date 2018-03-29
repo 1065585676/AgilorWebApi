@@ -10,6 +10,7 @@ using Agilor.Interface;
 using AgilorWebApi.Service;
 using System.Configuration;
 using System.Threading;
+using System.Net.Http.Headers;
 
 namespace AgilorWebApi.Controllers
 {
@@ -292,13 +293,29 @@ namespace AgilorWebApi.Controllers
                 }
 
                 Agilor.Interface.Val.Value setVal = new Agilor.Interface.Val.Value(targetName, val);
-                Thread thread = new Thread(() => ThreadMainWithParameters(agilorACI, setVal));
-                thread.Start();
-                foreach (ACI slaveAci in agilorSlaveACIs)
+                if (agilorSlaveACIs.Count > 0)
                 {
-                    thread = new Thread(() => ThreadMainWithParameters(slaveAci, setVal));
+                    // 向 slave 发起二次请求
+                    string[] slaveIps = ConfigurationManager.AppSettings["AgilorServerSlaveIp"].Split(';');
+                    HttpContent httpContent = new StringContent("{\"targetValue\": \"" + val.ToString() + "\"}");
+                    httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                    HttpClient httpClient = new HttpClient();
+                    foreach (string slaveIp in slaveIps)
+                    {
+                        httpClient.PostAsync("http://" + slaveIp + ":8098/Agilor/targets/" + targetName + "/set", httpContent);
+                    }
+                } else
+                {
+                    Thread thread = new Thread(() => ThreadMainWithParameters(agilorACI, setVal));
                     thread.Start();
                 }
+                //Thread thread = new Thread(() => ThreadMainWithParameters(agilorACI, setVal));
+                //thread.Start();
+                //foreach (ACI slaveAci in agilorSlaveACIs)
+                //{
+                //    thread = new Thread(() => ThreadMainWithParameters(slaveAci, setVal));
+                //    thread.Start();
+                //}
 
                 /*
                 agilorACI.SetValue(new Agilor.Interface.Val.Value(targetName, val));
